@@ -48,3 +48,10 @@ htmlcov/
 
 /static/_discarded/
 /templates/_discarded/
+
+# Envato template sources - local reference only
+/akademi/
+/edumin/
+
+/static/_discarded/
+/templates/_discarded/
