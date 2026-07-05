@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'apps.visitors',
     'apps.cafeteria',
     'apps.file_manager',
+    'apps.collaborators',
 ]
 
 
