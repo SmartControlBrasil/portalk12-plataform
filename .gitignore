@@ -34,3 +34,10 @@ node_modules/
 .coverage
 htmlcov/
 .pytest_cache/
+
+# Envato template sources - local reference only
+/akademi/
+/edumin/
+
+/static/_discarded/
+/templates/_discarded/
