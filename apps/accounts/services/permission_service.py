@@ -1,14 +1,17 @@
 """
 Serviço central de permissões do PortalK12.
 
-Hoje este serviço usa regras fixas baseadas no papel do usuário.
-No futuro, a função can() deverá considerar:
-- papel base do usuário;
-- grupos de acesso configuráveis por escola;
-- permissões individuais;
-- bloqueios individuais;
-- escopo por escola;
-- auditoria de mudanças de permissão.
+Modelo atual:
+- Super Admin passa em tudo.
+- Permissões individuais podem liberar ou bloquear.
+- Grupos de acesso ativos podem liberar permissões.
+- Papel base funciona como fallback do MVP.
+
+Modelo futuro:
+- grupos configuráveis por escola via tela;
+- permissões por checkbox;
+- auditoria de concessão/revogação;
+- escopo refinado por escola, turma, aluno e vínculo familiar.
 """
 
 from __future__ import annotations
@@ -94,22 +97,68 @@ COLLABORATOR_PERMISSIONS = {
 }
 
 
-def can(user: Any, permission_code: str) -> bool:
-    """
-    Verifica se o usuário possui uma permissão.
+def get_user_school(user: Any):
+    profile = getattr(user, "profile", None)
 
-    Importante:
-    - Superuser/staff/admin global passa em tudo.
-    - Diretor da escola possui permissões administrativas da escola.
-    - Professor e colaborador seguem escopo inicial do MVP.
-    - No futuro, esta função consultará permissões configuráveis no banco.
-    """
-    if not user or not getattr(user, "is_authenticated", False):
+    if profile and getattr(profile, "school", None):
+        return profile.school
+
+    return None
+
+
+def has_individual_block(user: Any, permission_code: str) -> bool:
+    from apps.accounts.models import UserPermissionOverride
+
+    school = get_user_school(user)
+
+    if school is None:
         return False
 
-    if is_system_admin(user):
-        return True
+    return UserPermissionOverride.objects.filter(
+        user=user,
+        school=school,
+        permission_code=permission_code,
+        allowed=False,
+        is_active=True,
+    ).exists()
 
+
+def has_individual_allow(user: Any, permission_code: str) -> bool:
+    from apps.accounts.models import UserPermissionOverride
+
+    school = get_user_school(user)
+
+    if school is None:
+        return False
+
+    return UserPermissionOverride.objects.filter(
+        user=user,
+        school=school,
+        permission_code=permission_code,
+        allowed=True,
+        is_active=True,
+    ).exists()
+
+
+def has_group_allow(user: Any, permission_code: str) -> bool:
+    from apps.accounts.models import AccessGroupPermission
+
+    school = get_user_school(user)
+
+    if school is None:
+        return False
+
+    return AccessGroupPermission.objects.filter(
+        group__school=school,
+        group__is_active=True,
+        group__members__user=user,
+        group__members__is_active=True,
+        permission_code=permission_code,
+        allowed=True,
+    ).exists()
+
+
+def has_base_role_permission(user: Any, permission_code: str) -> bool:
     if is_school_director(user):
         return permission_code in DIRECTOR_PERMISSIONS
 
@@ -120,6 +169,36 @@ def can(user: Any, permission_code: str) -> bool:
         return permission_code in COLLABORATOR_PERMISSIONS
 
     return False
+
+
+def can(user: Any, permission_code: str) -> bool:
+    """
+    Verifica se o usuário possui uma permissão.
+
+    Ordem:
+    1. Super Admin PortalK12 passa em tudo.
+    2. Bloqueio individual ativo nega.
+    3. Permissão individual ativa libera.
+    4. Grupo ativo com permissão libera.
+    5. Papel base libera como fallback.
+    6. Sem regra, nega.
+    """
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+
+    if is_system_admin(user):
+        return True
+
+    if has_individual_block(user, permission_code):
+        return False
+
+    if has_individual_allow(user, permission_code):
+        return True
+
+    if has_group_allow(user, permission_code):
+        return True
+
+    return has_base_role_permission(user, permission_code)
 
 
 def can_any(user: Any, permission_codes: list[str] | tuple[str, ...] | set[str]) -> bool:
