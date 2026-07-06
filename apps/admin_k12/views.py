@@ -29,8 +29,8 @@ ALLOWED_ADMIN_PAGES = {
 
     # aliases temporários para não quebrar links antigos
     "food": "cantina.html",
-    "cafeteria": "cantina.html",
-    "cafeteria-detail": "cantina-detail.html",  # alias temporário para não quebrar links antigos                                                                                                                       
+    "cantina": "cantina.html",
+    "cantina-detail": "cantina-detail.html",  # alias temporário para não quebrar links antigos                                                                                                                       
 
     "calendar": "calendar.html",
     "profile": "profile.html",

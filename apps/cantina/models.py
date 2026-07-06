@@ -7,13 +7,13 @@ from django.conf import settings
 from django.db import models
 
 
-class CafeteriaProductStatus(models.TextChoices):
+class CantinaProductStatus(models.TextChoices):
     ACTIVE = "ACTIVE", "Ativo"
     INACTIVE = "INACTIVE", "Inativo"
     OUT_OF_STOCK = "OUT_OF_STOCK", "Sem estoque"
 
 
-class CafeteriaOrderStatus(models.TextChoices):
+class CantinaOrderStatus(models.TextChoices):
     DRAFT = "DRAFT", "Rascunho"
     PENDING = "PENDING", "Pendente"
     PAID = "PAID", "Pago"
@@ -21,7 +21,7 @@ class CafeteriaOrderStatus(models.TextChoices):
     CANCELLED = "CANCELLED", "Cancelado"
 
 
-class CafeteriaPaymentMethod(models.TextChoices):
+class CantinaPaymentMethod(models.TextChoices):
     CASH = "CASH", "Dinheiro"
     PIX = "PIX", "Pix"
     CARD = "CARD", "Cartão"
@@ -29,12 +29,12 @@ class CafeteriaPaymentMethod(models.TextChoices):
     OTHER = "OTHER", "Outro"
 
 
-class CafeteriaProductCategory(models.Model):
+class CantinaProductCategory(models.Model):
     school = models.ForeignKey(
         "schools.School",
         verbose_name="escola",
         on_delete=models.CASCADE,
-        related_name="cafeteria_product_categories",
+        related_name="cantina_product_categories",
     )
 
     name = models.CharField("nome", max_length=120)
@@ -52,7 +52,7 @@ class CafeteriaProductCategory(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["school", "name"],
-                name="unique_cafeteria_category_name_per_school",
+                name="unique_cantina_category_name_per_school",
             ),
         ]
 
@@ -60,16 +60,16 @@ class CafeteriaProductCategory(models.Model):
         return f"{self.school.name} - {self.name}"
 
 
-class CafeteriaProduct(models.Model):
+class CantinaProduct(models.Model):
     school = models.ForeignKey(
         "schools.School",
         verbose_name="escola",
         on_delete=models.CASCADE,
-        related_name="cafeteria_products",
+        related_name="cantina_products",
     )
 
     category = models.ForeignKey(
-        CafeteriaProductCategory,
+        CantinaProductCategory,
         verbose_name="categoria",
         on_delete=models.SET_NULL,
         null=True,
@@ -119,7 +119,7 @@ class CafeteriaProduct(models.Model):
 
     image = models.ImageField(
         "imagem",
-        upload_to="cafeteria/products/",
+        upload_to="cantina/products/",
         null=True,
         blank=True,
     )
@@ -127,8 +127,8 @@ class CafeteriaProduct(models.Model):
     status = models.CharField(
         "status",
         max_length=20,
-        choices=CafeteriaProductStatus.choices,
-        default=CafeteriaProductStatus.ACTIVE,
+        choices=CantinaProductStatus.choices,
+        default=CantinaProductStatus.ACTIVE,
     )
 
     is_restricted = models.BooleanField(
@@ -145,7 +145,7 @@ class CafeteriaProduct(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="created_cafeteria_products",
+        related_name="created_cantina_products",
     )
 
     created_at = models.DateTimeField("criado em", auto_now_add=True)
@@ -158,12 +158,12 @@ class CafeteriaProduct(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["school", "sku"],
-                name="unique_cafeteria_product_sku_per_school",
+                name="unique_cantina_product_sku_per_school",
                 condition=~models.Q(sku=""),
             ),
             models.UniqueConstraint(
                 fields=["school", "name"],
-                name="unique_cafeteria_product_name_per_school",
+                name="unique_cantina_product_name_per_school",
             ),
         ]
 
@@ -177,17 +177,17 @@ class CafeteriaProduct(models.Model):
     @property
     def is_available(self):
         return (
-            self.status == CafeteriaProductStatus.ACTIVE
+            self.status == CantinaProductStatus.ACTIVE
             and self.current_stock > 0
         )
 
 
-class CafeteriaOrder(models.Model):
+class CantinaOrder(models.Model):
     school = models.ForeignKey(
         "schools.School",
         verbose_name="escola",
         on_delete=models.CASCADE,
-        related_name="cafeteria_orders",
+        related_name="cantina_orders",
     )
 
     student = models.ForeignKey(
@@ -196,7 +196,7 @@ class CafeteriaOrder(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="cafeteria_orders",
+        related_name="cantina_orders",
     )
 
     responsible_guardian = models.ForeignKey(
@@ -205,7 +205,7 @@ class CafeteriaOrder(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="cafeteria_orders",
+        related_name="cantina_orders",
     )
 
     created_by = models.ForeignKey(
@@ -214,21 +214,21 @@ class CafeteriaOrder(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="created_cafeteria_orders",
+        related_name="created_cantina_orders",
     )
 
     status = models.CharField(
         "status",
         max_length=20,
-        choices=CafeteriaOrderStatus.choices,
-        default=CafeteriaOrderStatus.PENDING,
+        choices=CantinaOrderStatus.choices,
+        default=CantinaOrderStatus.PENDING,
     )
 
     payment_method = models.CharField(
         "forma de pagamento",
         max_length=30,
-        choices=CafeteriaPaymentMethod.choices,
-        default=CafeteriaPaymentMethod.OTHER,
+        choices=CantinaPaymentMethod.choices,
+        default=CantinaPaymentMethod.OTHER,
     )
 
     paid_at = models.DateTimeField("pago em", null=True, blank=True)
@@ -253,16 +253,16 @@ class CafeteriaOrder(models.Model):
         return sum(item.total_amount for item in self.items.all())
 
 
-class CafeteriaOrderItem(models.Model):
+class CantinaOrderItem(models.Model):
     order = models.ForeignKey(
-        CafeteriaOrder,
+        CantinaOrder,
         verbose_name="pedido",
         on_delete=models.CASCADE,
         related_name="items",
     )
 
     product = models.ForeignKey(
-        CafeteriaProduct,
+        CantinaProduct,
         verbose_name="produto",
         on_delete=models.PROTECT,
         related_name="order_items",
