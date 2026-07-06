@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    "apps.auditlog.apps.AuditlogConfig",
+    "apps.communications.apps.CommunicationsConfig",
     # Third-party
     'widget_tweaks',
 
@@ -194,13 +195,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 LOGIN_URL = '/django-admin/login/'
 
-LOGIN_REDIRECT_URL = '/app/'
-
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/django-admin/app/'
 
 
-# -----------------------------------------------------------------------------
-# Primary key
-# -----------------------------------------------------------------------------
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+LOGOUT_REDIRECT_URL = '/django-admin/logout/'
