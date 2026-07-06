@@ -57,7 +57,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.portalk12',
     'apps.admin_k12',
-    'apps.accounts',
+    'apps.accounts.apps.AccountsConfig',
     'apps.schools',
     'apps.students',
     'apps.teachers',
