@@ -51,6 +51,21 @@ class UserProfile(models.Model):
     )
 
     is_active_profile = models.BooleanField("perfil ativo", default=True)
+    last_activity_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="última atividade",
+    )
+    last_activity_ip = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+        verbose_name="IP da última atividade",
+    )
+    last_activity_user_agent = models.TextField(
+        blank=True,
+        verbose_name="navegador/dispositivo da última atividade",
+    )
+
 
     created_at = models.DateTimeField("criado em", auto_now_add=True)
     updated_at = models.DateTimeField("atualizado em", auto_now=True)
