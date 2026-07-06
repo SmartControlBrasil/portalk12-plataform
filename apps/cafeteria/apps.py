@@ -4,4 +4,4 @@ from django.apps import AppConfig
 class CafeteriaConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'apps.cafeteria'
-    verbose_name = 'Cafeteria'
+    verbose_name = 'Cantina'
